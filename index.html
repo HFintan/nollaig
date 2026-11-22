@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ga">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Turas Dhaidí na Nollag</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE everyday puzzle for the public, light and inviting
+   IDEA a printed map of Ireland that you plan Santa's night on with a red pen
+   PICTURE the map itself, with your route drawn as you click
+   COLOUR white paper, black ink, soft green coast, red route, blue for others' routes
+   TYPE Fredoka for titles, Nunito Sans for text
+   LAYOUT map left, panel right (progress, form, leaderboard); phone: title, map, panel */
+:root{color-scheme:light;--bg:#fff;--ink:#111;--soft:#555;--line:#d4d4d4;--red:#c62828;--blue:#1565c0;--green:#4c8c4a}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font:16px/1.55 "Nunito Sans",system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(20px,3vw,40px) max(4vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+h1{font:700 clamp(32px,4.4vw,48px)/1.05 Fredoka,system-ui,sans-serif;letter-spacing:-.02em;margin:0 0 8px;text-wrap:balance}
+h2{font:600 21px/1.2 Fredoka,system-ui,sans-serif;margin:0 0 10px}
+.lede{margin:0 0 18px;color:var(--soft);max-width:64ch}
+.stage{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:clamp(16px,2.6vw,32px);align-items:start}
+.mapcard{border:1.5px solid var(--ink);border-radius:18px;overflow:hidden;background:#fff}
+.fig{position:relative;aspect-ratio:156.8/200;width:min(100%,calc((100svh - 210px)*0.784));margin:0 auto}
+.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+svg text{font-family:"Nunito Sans",system-ui,sans-serif;font-weight:800;paint-order:stroke;stroke:#fff;stroke-width:1px}
+.hz{cursor:pointer}
+.hz:hover use{opacity:.7}
+.hz:focus{outline:none}
+.hz:focus-visible circle{stroke:#1565c0;stroke-width:.7}
+.side{display:grid;gap:18px}
+.panel{border:1.5px solid var(--ink);border-radius:18px;padding:18px}
+.big{font:700 clamp(30px,4vw,42px)/1 Fredoka,system-ui,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
+.meta{color:var(--soft);margin:6px 0 12px}
+.trail{font-size:15px;color:var(--soft);margin:0 0 12px;overflow-wrap:anywhere}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+button{font:700 16px "Nunito Sans",system-ui,sans-serif;min-height:44px;padding:8px 16px;border-radius:12px;border:1.5px solid var(--ink);background:#fff;color:var(--ink);cursor:pointer}
+button:hover{background:#f2f2f2}
+button:focus-visible,input:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+button:disabled{opacity:.4;cursor:default}
+button.go{background:var(--red);border-color:var(--red);color:#fff}
+button.go:hover{background:#a81f1f}
+label{display:block;font-weight:600;margin:12px 0 4px}
+input[type=text]{font:16px "Nunito Sans",system-ui,sans-serif;width:100%;min-height:44px;padding:8px 12px;border:1.5px solid #888;border-radius:10px}
+.check{display:flex;gap:10px;align-items:flex-start;font-weight:400;margin:14px 0}
+.check input{width:22px;height:22px;margin:2px 0 0;flex:none;accent-color:var(--red)}
+.msg{margin:10px 0 0;font-weight:600}
+.msg.err{color:var(--red)}
+.board{width:100%;border-collapse:collapse;font-size:15px}
+.board th{text-align:left;font-weight:600;color:var(--soft);border-bottom:1.5px solid var(--ink);padding:6px 6px 6px 0}
+.board td{border-bottom:1px solid var(--line);padding:8px 6px 8px 0;vertical-align:top}
+.board td.n,.board th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.board tr.pick td{background:#eef4fc}
+.board button{min-height:36px;padding:4px 10px;font-size:14px}
+.scroll{overflow-x:auto;max-height:420px;overflow-y:auto}
+.small{font-size:14px;color:var(--soft)}
+details{margin-top:4px}
+summary{cursor:pointer;font-weight:600}
+[hidden]{display:none!important}
+@media(max-width:860px){.stage{grid-template-columns:minmax(0,1fr)}.fig{width:100%}}
+</style>
+</head>
+<body>
+<div class="band"><div class="wrap">
+  <h1>Turas Dhaidí na Nollag</h1>
+  <p class="lede">Caithfidh Daidí na Nollag cuairt a thabhairt ar gach contae in Éirinn: áit amháin i ngach ceann de na 32 contae, ag tosú agus ag críochnú i nGaillimh. Cén bealach is giorra? Cliceáil ar na bailte san ord is fearr leat.</p>
+  <div class="stage">
+    <div class="mapcard"><div class="fig"><svg id="map" viewBox="0 0 156.8 200" role="img" aria-label="Léarscáil d'Éirinn le háit amháin i ngach contae"></svg></div></div>
+    <div class="side">
+      <section class="panel" aria-live="polite">
+        <h2>Do mholadh</h2>
+        <div class="big" id="dist">0 km</div>
+        <p class="meta" id="count">0 as 31 baile</p>
+        <p class="trail" id="trail">Tosaigh i nGaillimh: cliceáil ar an gcéad bhaile eile.</p>
+        <div class="row">
+          <button id="undo">Cealaigh</button>
+          <button id="reset">Tosaigh arís</button>
+        </div>
+        <form id="form" hidden>
+          <p class="msg" style="margin-top:16px">Ar fheabhas! Thug tú cuairt ar gach baile. Fáilte romhat do mholadh a sheoladh chuig an gClár Ceann Riain.</p>
+          <label for="nm">Do chéad ainm</label>
+          <input type="text" id="nm" maxlength="30" autocomplete="given-name" required>
+          <label for="org">Scoil nó comhlacht (roghnach)</label>
+          <input type="text" id="org" maxlength="60" autocomplete="organization">
+          <label class="check"><input type="checkbox" id="ok" required><span>Aontaím go bhféadfar mo chéad ainm, mo scoil nó mo chomhlacht agus fad mo bhealaigh a thaispeáint ar an gClár Ceann Riain. <a href="#priobhaideacht">Fógra príobháideachta</a></span></label>
+          <button class="go" type="submit" id="send">Seol mo mholadh</button>
+          <p class="msg" id="sent" hidden></p>
+        </form>
+      </section>
+      <section class="panel">
+        <h2>Clár Ceann Riain</h2>
+        <p class="small" id="boardnote">Á lódáil…</p>
+        <div class="scroll"><table class="board" id="board" hidden><thead><tr><th class="n">#</th><th>Ainm</th><th>Scoil nó comhlacht</th><th class="n">Fad</th><th class="n">Dáta</th></tr></thead><tbody></tbody></table></div>
+      </section>
+    </div>
+  </div>
+</div></div>
+<div class="band" id="priobhaideacht" style="padding-top:0"><div class="wrap">
+  <details>
+    <summary>Fógra príobháideachta</summary>
+    <p class="small">Nuair a sheolann tú do mholadh, bailímid do chéad ainm, do scoil nó do chomhlacht (más mian leat) agus an bealach a roghnaigh tú. Ní fhoilsítear an bealach féin, ach a fhad amháin. Ní thaispeántar iarracht ar bith ar an gclár go dtí go gceadaítear í. Ní úsáidtear an t-eolas seo ach don Chlár Ceann Riain, agus coinneofar é fad a bheidh an clár ar líne. Chun d'iarracht a bhaint den chlár, scríobh chuig <span id="mail"></span>.</p>
+  </details>
+  <p class="small">Fad: mar a eitlíonn an préachán, ó lár baile go lár baile, i gciliméadair. Léarscáil: Natural Earth agus Code for Germany.</p>
+</div></div>
+<script>
+{
+/* ===== Settings: fill these in from the setup guide ===== */
+const CONFIG={
+  formAction:'https://docs.google.com/forms/d/e/1FAIpQLSeixgKdrqQtXtRk9sxYXUqT5_lN6VY9qeHUl7ahL4g_qPMMGw/formResponse',
+  fields:{name:'entry.289507597',org:'entry.2098005745',route:'entry.422037259',consent:'entry.513580456'},
+  consentValue:'Aontaím',
+  csv:'https://docs.google.com/spreadsheets/d/e/2PACX-1vQbKLhwskLYR6xPGMCI2f8KyKVY1UVb4kRTquiQ2SOzMAaDSIB8733G6l5eTqz7pJrwoSI5qybvJcgj/pub?gid=1642205769&single=true&output=csv',
+  email:'stemasgaeilge@gmail.com'
+};
+/* ========================================================= */
+const D={"names":["Gaillimh","Béal Feirste","Ard Mhacha","Ceatharlach","An Cabhán","Inis","Baile Bhuirne","Doire","Gaoth Dobhair","Dún Pádraig","Baile Átha Cliath","Inis Ceithleann","An Daingean","An Nás","Cill Chainnigh","Port Laoise","Cora Droma Rúisc","Luimneach","An Longfort","Ó Méith","Béal an Mhuirthead","Ráth Chairn","Muineachán","Tulach Mhór","Ros Comáin","Sligeach","Cluain Meala","An Ómaigh","An Rinn","An Muileann gCearr","Loch Garman","Cill Mhantáin"],"P":[[50.08,107.67],[137.08,45.32],[117.55,56.73],[109.65,128.16],[97.68,73.69],[52.05,127.82],[47.09,170.23],[99.14,26.23],[73.21,23.63],[143.86,57.84],[128.57,103.94],[90.08,57.03],[16.06,160.98],[117.15,110.26],[100.93,136.76],[99.39,118.82],[77.21,75.76],[62.15,136.31],[85.39,86.11],[128.62,69.01],[23.86,62.64],[111.64,91.62],[108.69,61.5],[94.08,107.52],[74.59,90.56],[66.38,60.21],[88.05,150.88],[99.38,44.95],[91.89,165.36],[98.32,95.62],[122.87,151.73],[134.62,121.35]],"W":156.8,"H":200,"county":"M10.1 162.5L10.6 161.9L10.2 160.5L10.9 159.7L10.6 159.2L10.3 159.3L10.4 159.0L12.1 157.7L12.3 158.0L12.0 158.4L12.1 159.0L13.1 159.4L13.3 158.9L12.9 158.3L13.5 157.6L13.0 157.3L13.4 156.6L15.0 156.2L15.3 155.5L16.0 155.4L16.3 154.9L17.6 154.8L17.7 154.4L18.7 153.9L19.2 154.0L19.1 155.1L19.5 155.3L19.0 156.4L21.5 155.7L22.7 154.2L22.6 153.6L22.0 153.0L22.7 152.9L22.9 153.3L23.2 152.7L23.5 153.0L23.1 153.5L23.2 154.2L22.9 154.9L24.9 156.7L27.5 156.5L28.2 155.5L28.7 155.3L28.9 155.4L28.3 155.8L28.5 156.1L30.2 155.8L30.5 155.1L29.9 154.6L27.1 154.7L26.7 153.6L27.8 153.0L28.2 151.6L28.1 150.7L28.3 149.5L25.3 148.6L25.1 147.8L26.2 147.2L27.4 147.5L28.4 147.1L30.1 146.4L31.7 144.9L32.2 145.0L32.6 144.1L32.5 143.0L32.8 142.2L32.6 141.9L33.0 141.1L32.2 140.1L31.0 139.9L29.1 140.9L27.9 140.6L26.6 141.5L25.3 141.2L26.0 140.4L26.9 140.3L27.1 139.7L28.8 139.3L29.3 138.3L32.0 136.4L32.2 135.8L33.3 135.5L33.1 135.0L33.4 134.4L34.2 134.0L33.9 133.2L34.5 133.0L34.5 132.6L36.3 132.1L36.7 132.9L36.8 132.5L37.7 132.2L37.8 131.6L37.5 131.3L38.1 130.9L37.8 130.4L38.0 130.2L37.8 129.5L38.8 129.1L38.9 128.3L39.5 128.2L39.0 127.6L39.5 127.1L39.2 126.8L39.3 126.3L41.7 124.3L41.9 123.7L41.5 123.1L40.4 123.6L38.5 123.7L38.3 123.2L39.5 122.0L39.6 121.1L40.5 120.2L40.1 119.7L41.4 118.1L41.6 117.0L43.0 116.1L43.5 114.9L43.5 114.2L43.7 113.6L44.3 113.2L47.0 114.1L47.1 114.2L46.8 114.1L46.8 114.5L47.4 114.8L48.3 113.9L47.8 113.4L49.2 113.0L49.4 112.5L52.5 112.1L52.7 112.8L53.2 113.2L52.9 111.4L53.6 110.7L52.6 110.6L52.4 111.1L52.7 111.5L51.6 111.5L52.2 110.8L50.3 110.1L51.5 109.9L51.5 109.4L52.1 109.1L51.9 108.9L52.3 108.1L51.7 107.7L51.4 108.1L50.6 107.7L48.5 108.7L41.6 109.0L36.9 110.0L36.1 109.2L36.2 108.7L35.7 108.0L36.1 107.5L35.9 107.2L35.4 107.6L35.6 108.1L35.2 109.3L34.8 109.1L34.4 109.5L33.9 108.6L34.7 107.3L34.0 107.4L34.4 106.9L34.3 105.7L33.9 106.0L34.0 106.7L33.4 107.0L33.6 108.3L33.5 109.6L32.2 110.0L31.5 109.0L31.4 109.7L30.0 109.6L30.4 107.9L31.7 108.8L31.4 108.0L31.6 107.7L31.4 107.1L31.8 106.6L31.4 106.5L32.5 105.8L32.2 104.8L32.6 105.2L33.1 104.9L33.2 105.7L34.2 105.3L34.1 104.9L32.9 104.4L33.4 103.9L32.6 103.9L33.2 103.4L33.9 103.5L33.8 102.9L33.5 102.9L33.7 102.3L33.3 102.2L33.0 103.0L32.2 103.4L31.8 104.7L31.2 105.1L31.0 105.9L30.3 106.0L30.0 106.7L29.3 106.1L28.6 106.9L29.0 106.0L28.4 105.8L28.0 106.1L28.0 106.9L26.2 105.1L26.6 104.3L26.6 103.4L26.2 102.5L26.1 101.4L25.6 102.5L25.8 102.9L25.5 103.2L25.4 102.6L24.8 102.5L25.0 103.0L24.8 103.1L24.2 102.5L22.8 102.3L22.3 101.4L22.6 101.2L21.6 100.6L21.2 101.2L20.4 101.2L20.2 102.1L20.0 101.5L19.6 101.6L19.8 101.2L19.4 100.6L18.7 101.3L18.1 101.2L18.6 100.8L18.4 100.4L18.7 99.7L19.6 99.5L19.8 98.9L21.5 99.7L21.8 99.5L22.0 98.8L21.0 98.4L21.1 98.0L20.8 97.7L21.3 97.1L20.1 96.8L19.7 96.3L19.7 95.5L18.8 95.8L18.4 94.9L18.0 94.8L18.3 94.2L18.9 93.6L19.1 94.0L19.2 93.7L20.5 94.1L20.0 93.2L22.0 93.5L22.4 92.6L22.1 91.6L23.3 91.7L23.1 91.3L25.5 92.2L27.0 91.3L26.9 90.2L26.0 89.6L26.2 88.4L25.8 87.6L26.6 85.6L26.1 84.9L26.3 84.5L29.7 83.5L30.3 83.9L31.8 83.7L33.2 83.2L33.2 82.1L33.6 82.7L33.9 82.3L33.2 81.7L33.4 81.4L33.9 81.8L33.5 81.1L32.9 81.4L33.0 81.0L32.6 81.1L32.8 79.9L33.2 80.4L33.3 79.5L33.4 80.2L33.9 80.3L33.8 79.3L33.3 79.3L33.1 78.7L32.8 78.8L32.8 79.2L32.2 78.9L31.7 79.2L31.6 78.2L31.2 78.9L31.1 78.3L30.1 78.0L27.4 79.6L26.3 79.8L25.3 79.4L25.2 80.0L24.5 79.6L24.5 79.0L23.0 77.2L22.0 77.2L22.3 75.2L21.7 74.6L21.2 74.6L20.8 75.3L20.1 74.5L19.0 75.2L18.9 74.8L18.4 74.7L18.3 75.1L16.9 74.3L16.3 74.5L16.9 74.1L17.7 74.1L18.3 73.5L18.3 72.5L19.8 73.3L20.7 73.2L21.6 72.1L22.4 72.1L22.9 72.7L23.8 72.7L24.3 71.8L25.7 73.5L25.0 73.7L24.9 74.6L25.0 75.0L26.0 74.9L25.7 76.4L26.2 75.9L26.2 75.3L27.8 75.2L27.7 74.5L27.2 74.7L27.1 73.7L27.2 73.4L27.7 73.7L27.8 73.2L26.9 73.0L26.6 74.0L25.9 73.9L25.7 73.5L26.9 73.0L26.2 71.1L26.6 70.9L26.8 70.1L27.3 70.5L27.4 70.0L27.0 69.9L27.9 68.9L27.3 68.1L26.6 69.9L25.6 70.4L24.4 70.3L24.6 69.8L24.5 69.2L23.8 68.4L25.3 68.0L25.5 67.5L24.7 66.5L24.8 66.0L25.2 66.0L25.1 65.5L24.0 64.7L24.9 65.1L25.4 64.7L25.4 64.2L24.4 63.7L23.8 62.7L23.3 63.3L23.5 63.9L23.3 64.7L22.5 64.2L22.5 65.6L22.1 65.2L21.0 65.7L22.0 66.4L21.6 66.6L21.8 67.4L21.3 67.3L21.1 67.8L21.9 68.6L21.3 69.2L19.9 68.4L20.3 66.4L20.7 66.1L21.2 64.8L20.9 63.9L22.1 62.9L22.0 62.5L20.5 61.8L21.2 61.4L21.3 60.5L23.3 59.5L23.4 58.8L23.7 58.7L24.8 60.4L25.8 60.3L26.2 60.9L26.7 60.6L26.4 62.0L25.9 62.1L26.0 62.5L25.2 62.6L25.2 63.2L27.0 63.0L27.1 62.6L26.6 62.4L27.1 62.2L27.0 61.1L27.3 60.4L29.0 59.7L27.5 59.0L27.7 58.6L27.3 57.8L27.9 58.0L29.6 57.0L32.4 58.3L34.3 57.9L37.1 58.6L37.6 58.2L38.9 58.7L40.6 58.7L40.9 59.3L42.0 57.8L44.3 58.6L44.7 59.3L44.7 60.0L45.7 59.7L45.9 60.2L45.6 61.5L46.3 61.8L46.1 62.6L47.2 63.1L47.8 63.7L48.9 63.2L50.1 60.4L50.1 59.4L51.0 59.3L53.6 59.4L56.6 61.3L58.3 60.1L58.6 60.6L59.3 60.8L61.2 60.4L62.2 62.1L63.2 62.7L63.3 63.4L63.5 63.0L64.4 62.9L64.4 62.4L63.7 62.3L62.8 61.0L62.2 61.2L62.7 60.3L62.5 59.7L63.0 59.9L62.9 59.1L63.6 58.7L63.8 57.2L61.8 57.5L61.7 58.1L61.5 58.0L61.3 57.9L61.4 57.2L60.7 57.1L60.7 56.3L62.2 55.9L62.4 55.4L63.6 54.8L63.8 53.9L64.3 54.1L65.1 53.3L65.8 53.1L66.0 53.2L66.6 52.5L66.1 51.8L66.7 51.0L67.1 51.0L67.2 51.6L67.8 51.8L71.6 50.6L72.6 49.1L72.2 48.5L73.8 47.3L73.5 46.3L75.1 45.1L75.2 43.1L74.5 43.1L71.4 44.9L71.3 44.5L72.0 43.2L71.7 42.7L70.1 43.5L68.7 45.3L67.8 45.6L66.8 46.5L67.2 45.5L69.0 44.5L69.1 43.8L68.4 43.4L67.8 44.2L67.2 44.0L66.3 44.8L66.1 43.3L63.3 44.6L62.3 43.9L60.6 44.0L60.3 43.0L57.5 42.1L57.6 40.9L57.1 40.3L58.7 39.8L58.8 38.4L59.8 38.1L59.8 37.7L60.3 37.2L60.7 37.4L61.0 36.9L62.8 36.5L64.7 37.2L65.0 36.8L64.2 36.1L66.2 35.8L64.9 34.9L64.8 34.4L63.8 34.3L64.0 34.0L65.2 34.0L65.9 33.2L66.6 33.5L67.0 33.1L67.2 33.6L67.8 33.1L68.9 33.0L68.8 31.3L66.9 30.2L66.9 29.7L67.2 29.4L66.9 29.1L66.9 28.2L67.4 27.9L67.9 28.4L67.8 29.1L68.4 29.0L68.5 28.5L69.2 28.8L69.3 28.4L68.1 28.0L67.4 27.2L66.8 27.4L66.3 26.2L66.7 26.3L67.1 25.5L67.9 25.5L67.4 24.8L67.8 24.4L67.6 23.5L68.2 23.9L68.2 24.6L68.6 24.0L69.1 24.5L69.9 24.2L70.1 23.8L69.8 23.2L70.3 22.9L70.1 22.6L70.3 22.3L70.5 22.9L70.8 22.9L70.6 21.8L70.9 21.7L70.9 20.7L71.4 20.1L71.4 19.0L71.8 18.6L75.1 19.2L75.6 18.3L76.0 18.4L76.2 18.7L75.3 19.3L75.4 20.2L75.9 19.9L75.9 19.5L76.3 19.3L76.4 18.5L79.0 17.9L79.3 17.5L79.0 16.7L79.3 16.0L80.2 15.4L80.6 16.0L81.3 16.0L81.3 16.7L80.9 17.0L81.2 17.5L82.4 17.0L82.7 17.2L82.6 17.9L83.3 17.8L83.9 18.2L83.3 19.1L83.6 19.6L84.6 17.7L84.4 16.9L84.0 17.1L83.3 16.5L83.5 15.2L84.3 14.9L84.7 15.5L84.7 14.8L85.1 14.8L85.0 14.4L85.7 13.9L85.9 14.2L85.6 15.3L85.9 15.5L86.4 14.9L86.5 13.9L88.1 14.4L88.3 13.6L90.1 13.0L90.6 14.9L90.9 15.1L90.4 16.7L91.8 17.6L91.7 18.2L92.7 19.4L93.2 19.5L93.3 20.3L93.0 20.7L92.9 21.6L91.1 22.7L91.2 23.7L91.9 23.5L92.1 24.4L90.0 26.2L89.4 27.2L89.7 27.8L90.0 27.4L90.4 27.6L91.0 26.4L92.7 24.9L93.2 25.0L93.4 24.2L93.9 24.1L92.9 23.1L92.8 22.7L93.3 22.1L94.0 22.1L95.0 23.0L95.0 22.4L94.3 21.7L94.5 20.9L94.9 20.5L94.7 19.8L93.3 17.5L92.2 16.7L93.1 14.9L92.8 14.4L93.5 13.6L93.1 12.6L94.6 12.8L94.7 12.1L95.5 12.9L95.7 12.5L97.1 12.2L97.3 11.1L98.4 11.3L98.4 10.7L97.9 10.4L98.0 9.2L96.6 8.4L97.1 8.0L98.5 8.7L99.9 8.6L100.2 9.1L102.5 9.8L103.0 10.2L103.0 11.0L103.6 12.2L104.3 12.2L105.8 13.2L106.6 13.1L107.6 13.5L107.7 14.0L109.0 14.1L110.0 14.9L109.2 16.2L103.2 19.2L100.9 22.3L100.8 23.7L102.3 23.3L105.0 24.1L106.3 23.8L107.3 22.7L107.5 21.2L108.5 19.7L108.9 16.9L111.1 17.9L114.7 17.7L117.9 16.2L119.8 16.1L121.3 14.7L122.5 14.3L124.2 15.1L125.3 14.5L126.0 14.6L129.1 16.2L131.4 15.6L132.5 15.8L134.8 18.1L134.7 20.8L134.2 22.6L134.4 23.0L136.6 23.6L136.7 24.8L136.3 26.9L137.8 27.4L139.1 28.9L139.5 30.3L140.9 32.0L141.5 34.5L143.0 35.2L141.6 33.4L142.0 32.6L142.8 32.8L144.2 34.3L144.6 35.8L144.5 37.2L143.5 38.9L140.2 40.2L138.9 41.5L138.0 43.3L138.5 44.6L138.9 44.7L140.4 42.6L142.9 41.2L144.4 41.7L147.8 41.2L148.9 42.2L149.5 45.1L150.5 46.4L150.8 48.9L151.8 50.4L151.8 51.5L150.9 53.1L151.0 54.8L150.3 55.7L150.6 56.3L149.5 57.3L147.8 54.3L147.9 53.2L148.7 51.7L148.3 49.1L145.8 46.5L144.3 46.0L144.4 46.8L144.1 47.9L146.4 48.9L145.3 49.4L146.0 49.9L145.8 51.0L146.4 51.5L146.4 52.4L145.4 55.3L144.3 56.4L147.7 55.2L148.5 56.0L148.8 57.8L148.4 59.2L146.7 61.2L146.2 61.2L146.0 62.2L145.5 62.4L144.9 61.6L143.3 61.5L139.8 62.4L139.6 65.7L138.9 68.3L134.7 71.5L133.2 71.5L132.7 71.2L133.0 70.4L131.0 69.8L130.6 68.9L128.5 68.4L129.0 69.6L130.2 70.4L130.6 71.2L131.7 72.0L132.2 71.6L132.3 72.4L133.0 73.2L131.9 74.2L131.2 74.3L129.1 74.0L127.5 72.8L126.3 72.7L126.3 73.5L125.7 74.1L125.6 75.2L125.2 75.5L125.5 77.8L126.0 78.6L126.6 79.1L127.3 79.0L129.2 79.8L128.8 80.4L128.5 82.2L129.8 82.9L129.3 83.3L128.9 85.0L129.4 89.0L129.9 90.5L130.6 90.7L130.7 91.3L131.2 91.8L131.6 92.7L133.1 92.8L133.1 93.7L133.6 94.3L133.4 95.5L133.8 95.8L132.7 96.5L132.8 97.1L133.2 97.3L132.5 98.0L132.1 99.2L132.4 99.6L132.7 101.8L134.1 101.8L134.6 102.3L134.4 103.4L133.6 103.4L132.8 102.2L131.3 103.9L130.8 103.4L130.5 103.7L130.6 104.4L131.6 104.3L130.0 104.8L130.5 105.9L131.6 106.5L132.3 106.2L132.4 106.8L133.6 107.6L132.9 107.9L132.7 108.8L133.1 110.8L133.7 111.6L133.8 113.0L134.7 114.8L134.9 117.2L134.5 120.5L134.7 121.2L135.9 122.1L135.5 122.7L135.3 124.0L134.8 124.4L134.8 125.3L134.2 126.2L134.3 127.1L132.9 128.1L131.9 129.8L131.8 130.6L132.0 130.9L131.8 131.5L132.0 131.9L131.8 132.5L131.9 133.0L130.6 134.6L129.5 137.0L129.4 138.1L130.4 141.0L130.1 142.0L126.1 148.2L125.7 149.6L125.8 151.4L125.1 150.9L123.7 150.8L123.1 151.4L123.4 153.1L124.6 153.7L125.0 153.0L125.0 154.4L125.4 155.5L126.4 155.5L127.1 156.3L126.2 157.6L126.2 158.7L125.8 159.4L122.5 158.6L119.2 159.6L118.6 158.7L116.8 157.6L114.7 157.5L113.8 158.0L113.2 157.5L112.6 158.3L112.9 158.6L112.5 159.0L112.7 159.4L111.2 160.0L110.4 161.5L109.8 161.8L109.7 161.4L110.6 160.2L110.6 159.4L110.2 158.6L110.5 158.2L109.0 156.2L108.6 156.4L108.6 157.9L108.3 158.7L108.6 159.2L109.2 159.2L108.6 159.5L108.1 160.8L107.1 161.3L106.3 161.1L104.8 161.6L105.2 160.6L103.6 160.1L102.6 161.4L101.2 161.6L99.6 161.0L99.2 161.4L97.6 161.1L97.0 161.6L95.5 161.6L94.0 162.8L92.7 163.0L92.3 164.0L91.2 163.0L90.7 163.6L90.9 164.8L91.3 165.2L92.8 165.1L91.6 166.0L91.4 166.7L91.6 167.9L90.8 168.5L88.1 168.9L87.6 169.8L87.9 170.4L87.6 170.5L86.6 170.4L86.1 169.9L84.8 170.5L84.2 169.8L84.1 170.4L82.4 172.1L82.4 172.6L83.5 173.3L79.9 174.2L79.1 175.1L79.7 175.9L78.0 176.6L76.1 176.8L74.9 177.8L74.6 177.3L72.6 177.4L72.7 176.8L72.3 176.4L72.6 175.7L73.2 175.9L73.0 175.3L74.2 175.0L74.3 174.3L72.3 174.3L71.4 174.7L71.5 175.3L71.9 175.4L71.4 175.4L71.2 176.3L72.0 176.6L72.1 177.2L71.2 178.2L71.4 179.1L71.0 180.3L70.5 180.2L70.1 181.0L69.0 181.2L68.8 181.7L68.0 181.6L67.7 182.4L67.1 182.2L66.3 183.0L65.9 183.0L65.9 182.3L65.5 181.7L65.4 182.2L65.6 182.5L65.0 183.1L64.9 183.8L64.4 184.4L64.9 185.2L64.6 185.6L64.9 186.1L64.8 186.3L63.9 185.4L63.8 184.6L61.2 184.9L60.9 184.1L60.2 185.6L60.7 186.1L60.0 186.7L60.1 187.5L59.7 188.0L58.4 187.8L58.4 187.1L57.9 187.3L55.8 186.5L55.4 186.8L55.3 187.7L54.7 188.0L54.8 188.8L54.0 189.4L53.4 189.1L53.0 189.9L52.8 188.7L51.6 188.1L49.4 189.0L48.6 188.6L48.5 189.8L46.9 190.6L46.6 190.1L46.7 191.0L45.9 190.8L45.7 191.3L45.8 191.8L45.3 192.1L44.9 192.1L44.9 191.6L44.1 192.0L44.0 191.5L43.6 191.5L41.9 193.0L41.8 192.6L40.7 192.5L41.0 191.9L40.6 191.8L40.5 192.7L39.2 193.5L39.7 192.8L39.5 192.3L39.9 192.1L40.0 191.3L39.5 191.8L38.9 191.7L39.0 191.2L38.6 191.2L40.2 190.2L40.5 189.2L39.8 189.6L39.8 189.2L39.5 189.2L38.6 190.6L37.7 190.2L37.6 190.6L37.9 190.6L37.5 191.5L37.3 191.0L37.5 190.4L36.8 190.6L36.8 190.0L36.5 189.9L36.4 190.9L36.7 191.0L35.4 191.8L35.0 191.4L34.7 192.0L34.6 191.6L33.9 191.7L33.8 190.8L33.3 190.6L33.1 191.2L31.9 191.5L32.0 192.7L30.0 193.7L30.2 193.1L29.9 192.7L29.3 193.6L28.6 193.6L28.8 192.5L28.1 192.1L30.6 190.2L32.3 189.8L33.3 188.8L32.8 188.3L33.4 188.4L35.9 186.2L35.2 186.0L33.1 187.4L31.4 187.9L31.2 188.4L27.8 189.3L29.4 188.0L29.7 187.5L33.0 185.3L37.3 183.5L37.8 182.8L36.7 182.7L38.2 181.5L37.8 182.8L38.7 182.7L39.0 181.2L38.7 180.7L37.6 181.0L36.7 180.4L36.7 180.0L36.3 180.3L36.4 180.8L36.2 181.2L35.4 181.4L35.1 182.3L33.6 183.0L31.4 182.9L31.1 183.3L26.9 184.3L28.6 184.7L29.7 184.3L29.3 185.0L28.4 185.5L26.8 186.0L25.8 185.5L24.5 185.7L22.5 187.0L22.1 186.8L22.1 186.4L20.4 186.4L18.9 187.4L19.5 186.5L19.3 186.1L16.9 187.3L17.8 186.4L19.6 185.5L20.1 185.9L21.8 185.4L21.9 184.0L20.7 183.4L21.1 183.0L22.1 183.3L24.2 182.5L24.7 181.2L23.4 181.0L24.1 180.2L26.1 179.5L26.9 178.8L27.2 179.1L27.0 179.6L27.4 179.5L27.7 179.3L27.9 178.1L28.4 178.6L29.3 178.6L29.3 178.2L28.5 177.8L29.7 177.1L31.1 175.4L33.5 174.8L34.5 174.2L34.5 173.8L33.5 174.2L33.2 173.8L33.0 174.3L32.8 174.0L30.7 174.7L28.9 176.3L28.7 175.7L27.2 177.3L27.2 176.5L26.6 176.6L26.3 177.3L26.7 177.4L26.2 177.7L26.1 176.9L25.2 177.3L25.0 177.0L23.2 178.6L22.5 178.2L22.0 178.9L20.8 179.1L20.8 179.6L20.0 180.0L19.7 179.8L20.0 179.0L19.4 179.3L18.9 178.6L17.2 178.0L18.5 177.7L18.7 176.9L18.7 175.8L17.8 175.0L16.7 175.0L16.1 175.9L16.0 176.5L16.3 176.6L14.0 177.8L13.6 177.2L14.1 176.9L14.1 175.0L12.4 175.0L12.0 175.6L12.8 174.3L12.1 173.1L11.5 173.3L12.1 171.8L13.2 171.6L13.7 171.2L13.7 170.7L14.3 171.0L15.2 170.2L15.5 170.5L15.2 170.8L15.6 171.1L15.5 171.6L14.1 172.7L16.3 171.8L16.5 171.3L15.8 171.0L16.0 170.6L15.6 170.0L14.6 169.8L15.5 169.1L16.0 169.2L16.4 168.0L17.6 168.0L18.2 167.2L19.9 166.2L22.7 165.9L24.2 165.2L24.4 163.5L24.6 163.4L24.8 163.4L24.5 163.7L24.6 164.3L24.5 164.8L25.0 164.5L26.3 162.3L26.4 161.1L26.7 161.3L26.7 162.4L27.5 162.2L29.3 161.5L29.3 160.2L27.4 160.1L24.9 160.7L24.7 161.2L25.5 162.3L25.4 162.6L24.8 162.3L23.9 160.9L20.6 161.7L19.7 162.3L19.1 162.0L18.1 162.5L17.6 161.9L15.4 162.4L14.5 162.2L13.4 161.4L13.0 162.0L13.8 162.5L13.6 162.7L10.9 163.1L10.6 162.5L10.1 162.5ZM127.9 12.1L129.2 11.4L131.0 11.7L131.0 12.2L130.4 13.7L130.5 12.7L130.0 12.1L127.9 12.1ZM72.7 13.4L72.9 13.1L74.0 13.8L74.4 13.6L74.3 14.1L73.9 14.1L72.7 13.4ZM69.0 22.0L69.4 21.1L69.9 22.1L69.5 22.4L69.0 22.0ZM63.6 27.0L64.3 26.0L64.0 25.4L64.5 25.4L64.6 24.9L65.8 26.0L66.1 27.2L65.1 27.6L63.6 27.0ZM36.9 194.7L38.1 193.3L38.7 193.5L37.8 194.7L37.2 195.0L36.9 194.7ZM36.1 118.1L36.7 117.2L37.6 117.6L36.9 118.3L36.1 118.1ZM34.3 117.2L34.9 115.8L35.8 115.8L35.9 116.4L35.5 117.0L34.3 117.2ZM27.8 113.7L29.4 113.3L30.3 113.5L30.7 114.2L31.9 113.8L33.3 114.3L32.9 114.9L33.1 115.4L34.0 115.4L33.7 116.2L33.3 116.2L32.2 115.3L27.8 113.7ZM22.2 83.1L22.3 82.5L23.6 82.0L24.0 81.4L25.2 82.4L24.4 83.1L22.2 83.1ZM19.7 87.5L20.2 86.8L21.3 86.9L20.7 87.7L19.8 87.9L19.7 87.5ZM16.2 90.5L16.9 91.1L18.1 90.4L18.6 90.7L18.7 91.5L19.2 91.5L18.2 91.8L16.7 91.4L16.6 91.9L16.2 90.5ZM16.9 68.3L17.7 67.3L17.7 66.3L18.1 65.7L18.5 65.6L18.1 66.2L18.6 67.1L18.2 67.1L17.8 67.9L16.9 68.3ZM15.1 92.0L15.6 91.2L16.2 91.7L16.3 92.3L16.0 92.4L16.1 92.1L15.9 91.9L15.1 92.0ZM7.3 164.2L8.8 162.8L8.9 162.2L9.4 162.7L7.3 164.2Z","lbl":{"2":[3.2,1.1,"start"],"22":[3.2,1.1,"start"],"18":[3.2,1.1,"start"],"24":[3.2,1.1,"start"],"3":[3.2,1.1,"start"],"14":[3.2,1.1,"start"],"15":[3.2,1.1,"start"],"23":[-3.2,1.1,"end"],"29":[3.2,1.1,"start"],"10":[0,-3.9,"middle"],"13":[3.2,1.1,"start"],"16":[-3.2,1.1,"end"],"5":[3.2,1.1,"start"],"17":[3.2,1.1,"start"],"21":[3.2,1.1,"start"],"1":[-3.2,1.1,"end"],"9":[0,-3.9,"middle"],"26":[3.2,1.1,"start"],"28":[3.2,1.1,"start"],"11":[0,-3.9,"middle"],"27":[-3.2,1.1,"end"],"4":[3.2,1.1,"start"],"19":[3.2,1.1,"start"],"31":[0,-3.9,"middle"],"7":[3.2,1.1,"start"],"25":[3.2,1.1,"start"],"0":[3.2,1.1,"start"],"8":[-3.2,1.1,"end"],"30":[3.2,1.1,"start"],"6":[3.2,1.1,"start"],"12":[3.2,1.1,"start"],"20":[3.2,1.1,"start"]},"K":[[0.0,250.5,198.29,149.86,137.55,47.73,147.61,223.15,205.18,248.86,185.99,151.64,149.84,159.14,139.39,120.07,98.6,73.37,97.49,205.58,122.61,150.13,175.16,104.26,70.51,118.18,136.51,187.27,169.05,117.44,202.9,203.54],[250.5,0.0,52.38,205.52,112.99,278.4,363.39,97.63,154.48,33.37,139.54,111.67,395.01,159.93,231.61,194.34,155.97,277.38,153.67,59.14,264.2,124.07,75.72,177.58,180.05,166.65,274.28,86.52,302.4,148.9,252.99,179.25],[198.29,52.38,0.0,169.35,61.0,227.54,315.51,83.32,128.01,60.83,114.19,63.44,343.79,126.14,192.63,152.4,103.79,228.47,101.95,38.67,217.1,83.37,23.36,131.68,127.93,118.55,232.57,50.2,263.14,102.04,224.23,157.46],[149.86,205.52,169.35,0.0,131.43,137.85,180.85,241.44,260.56,184.21,72.68,173.81,238.64,45.82,29.13,32.94,145.32,115.53,114.55,146.39,254.24,86.23,157.1,61.16,121.5,189.77,74.63,197.57,97.61,81.26,64.01,61.77],[137.55,112.99,61.0,131.43,0.0,166.97,257.53,111.89,130.7,113.45,101.66,43.03,282.93,97.57,148.84,106.42,47.96,169.83,41.02,72.81,173.43,53.41,38.46,80.16,67.06,79.32,183.33,67.85,216.47,51.71,193.39,142.1],[47.73,278.4,227.54,137.85,166.97,0.0,100.66,263.39,250.43,271.66,190.51,189.26,116.81,160.53,119.1,115.0,136.32,31.4,126.07,227.61,167.34,165.08,205.43,110.92,102.8,162.87,102.24,224.61,130.69,133.49,179.5,197.84],[147.61,363.39,315.51,180.85,257.53,100.66,0.0,360.83,350.91,350.71,250.49,285.63,78.69,220.04,152.43,174.91,233.94,87.88,218.39,307.61,259.5,241.33,295.16,186.06,198.98,263.31,109.52,320.16,109.88,214.5,189.33,240.62],[223.15,97.63,83.32,241.44,111.89,263.39,360.83,0.0,59.22,126.68,195.41,75.5,372.82,202.38,260.51,218.19,127.17,273.43,144.64,121.46,192.86,156.78,85.95,191.92,161.86,109.79,294.89,44.1,328.32,163.54,300.94,238.89],[205.18,154.48,128.01,260.56,130.7,250.43,350.91,59.22,0.0,180.75,228.61,87.68,350.42,228.19,274.36,232.43,123.2,266.78,149.89,166.22,145.78,183.17,120.74,203.53,157.75,87.6,301.87,78.05,336.88,179.31,323.55,271.01],[248.86,33.37,60.83,184.21,113.45,271.66,350.71,126.68,180.75,0.0,114.37,124.24,388.37,138.45,211.73,177.59,160.35,266.95,151.51,44.05,277.79,109.43,81.78,165.14,178.85,179.21,255.91,106.83,281.81,138.62,226.77,151.23],[185.99,139.54,114.19,72.68,101.66,190.51,250.49,195.41,228.61,114.37,0.0,142.5,301.4,30.86,101.61,77.63,137.66,175.74,110.0,82.31,263.65,49.33,110.29,82.06,131.06,178.26,147.07,154.75,169.43,74.02,113.45,43.48],[151.64,111.67,63.44,173.81,43.03,189.26,285.63,75.5,87.68,124.24,142.5,0.0,301.29,140.52,189.62,147.23,53.29,198.06,69.39,93.63,153.72,95.75,44.3,119.34,86.85,55.3,221.2,35.64,255.32,92.94,236.24,184.12],[149.84,395.01,343.79,238.64,282.93,116.81,78.69,372.82,350.42,388.37,301.4,301.29,0.0,270.61,212.94,223.81,248.06,125.66,241.91,344.32,232.49,280.94,321.34,225.69,217.05,265.79,176.22,336.93,184.84,249.94,260.01,300.38],[159.14,159.93,126.14,45.82,97.57,160.53,220.04,202.38,228.19,138.45,30.86,140.52,270.61,0.0,73.5,46.8,124.23,144.96,94.07,100.86,245.79,45.8,116.6,55.07,110.67,167.52,118.43,159.39,143.37,56.31,98.7,49.09],[139.39,231.61,192.63,29.13,148.84,119.1,152.43,260.51,274.36,211.73,101.61,189.62,212.94,73.5,0.0,42.45,154.33,93.21,124.94,172.55,252.16,109.39,178.31,70.83,125.59,197.97,45.52,216.41,70.86,97.15,63.59,88.46],[120.07,194.34,152.4,32.94,106.42,115.0,174.91,218.19,232.43,177.59,77.63,147.23,223.81,46.8,42.45,0.0,114.14,98.17,83.89,136.05,221.37,70.35,136.84,29.47,88.75,158.39,80.3,174.09,111.16,54.72,95.89,84.19],[98.6,155.97,103.79,145.32,47.96,136.32,233.94,127.17,123.2,160.35,137.66,53.29,248.06,124.23,154.33,114.14,0.0,147.06,30.98,120.72,127.79,88.85,80.49,84.69,35.41,44.47,178.88,88.91,214.03,68.09,209.33,172.83],[73.37,277.38,228.47,115.53,169.83,31.4,87.88,273.43,266.78,266.95,175.74,198.06,125.66,144.96,93.21,98.17,147.06,0.0,130.51,223.21,195.7,157.88,207.68,102.02,111.79,179.61,71.27,232.38,99.34,128.82,150.88,177.04],[97.49,153.67,101.95,114.55,41.02,126.07,218.39,144.64,149.89,151.51,110.0,69.39,241.91,94.07,124.94,83.89,30.98,130.51,0.0,108.65,153.65,62.99,79.45,54.45,27.41,75.41,152.76,102.3,187.41,37.76,178.57,143.0],[205.58,59.14,38.67,146.39,72.81,227.61,307.61,121.46,166.22,44.05,82.31,93.63,344.32,100.86,172.55,136.05,120.72,223.21,108.65,0.0,243.48,66.44,49.49,121.66,136.06,145.79,215.59,88.17,243.31,94.65,195.41,124.14],[122.61,264.2,217.1,254.24,173.43,167.34,259.5,192.86,145.78,277.79,263.65,153.72,232.49,245.79,252.16,221.37,127.79,195.7,153.65,243.48,0.0,215.9,196.44,195.56,135.4,98.58,257.55,179.05,291.07,190.48,314.71,294.8],[150.13,124.07,83.37,86.23,53.41,165.08,241.33,156.78,183.17,109.43,49.33,95.75,280.94,45.8,109.39,70.35,88.85,157.88,62.99,66.44,215.9,0.0,71.32,55.86,87.1,128.93,150.55,113.62,180.09,32.74,144.16,88.7],[175.16,75.72,23.36,157.1,38.46,205.43,295.16,85.95,120.74,81.78,110.29,44.3,321.34,116.6,178.31,136.84,80.49,207.68,79.45,49.49,196.44,71.32,0.0,113.72,104.95,97.97,216.22,44.52,248.0,83.99,215.27,153.64],[104.26,177.58,131.68,61.16,80.16,110.92,186.06,191.92,203.53,165.14,82.06,119.34,225.69,55.07,70.83,29.47,84.69,102.02,54.45,121.66,195.56,55.86,113.72,0.0,60.92,128.99,103.19,147.97,136.42,29.76,124.93,101.73],[70.51,180.05,127.93,121.5,67.06,102.8,198.98,161.86,157.75,178.85,131.06,86.85,217.05,110.67,125.59,88.75,35.41,111.79,27.41,136.06,135.4,87.1,104.95,60.92,0.0,74.05,145.72,121.94,181.07,57.07,184.48,159.54],[118.18,166.65,118.55,189.77,79.32,162.87,263.31,109.79,87.6,179.21,178.26,55.3,265.79,167.52,197.97,158.39,44.47,179.61,75.41,145.79,98.58,128.93,97.97,128.99,74.05,0.0,219.74,84.13,255.11,111.92,253.76,215.54],[136.51,274.28,232.57,74.63,183.33,102.24,109.52,294.89,301.87,255.91,147.07,221.2,176.22,118.43,45.52,80.3,178.88,71.27,152.76,215.59,257.55,150.55,216.22,103.19,145.72,219.74,0.0,251.06,35.39,132.5,84.3,131.76],[187.27,86.52,50.2,197.57,67.85,224.61,320.16,44.1,78.05,106.83,154.75,35.64,336.93,159.39,216.41,174.09,88.91,232.38,102.3,88.17,179.05,113.62,44.52,147.97,121.94,84.13,251.06,0.0,284.33,119.45,257.67,198.03],[169.05,302.4,263.14,97.61,216.47,130.69,109.88,328.32,336.88,281.81,169.43,255.32,184.84,143.37,70.86,111.16,214.03,99.34,187.41,243.31,291.07,180.09,248.0,136.42,181.07,255.11,35.39,284.33,0.0,165.07,81.8,146.18],[117.44,148.9,102.04,81.26,51.71,133.49,214.5,163.54,179.31,138.62,74.02,92.94,249.94,56.31,97.15,54.72,68.09,128.82,37.76,94.65,190.48,32.74,83.99,29.76,57.07,111.92,132.5,119.45,165.07,0.0,144.63,105.25],[202.9,252.99,224.23,64.01,193.39,179.5,189.33,300.94,323.55,226.77,113.45,236.24,260.01,98.7,63.59,95.89,209.33,150.88,178.57,195.41,314.71,144.16,215.27,124.93,184.48,253.76,84.3,257.67,81.8,144.63,0.0,76.97],[203.54,179.25,157.46,61.77,142.1,197.84,240.62,238.89,271.01,151.23,43.48,184.12,300.38,49.09,88.46,84.19,172.83,177.04,143.0,124.14,294.8,88.7,153.64,101.73,159.54,215.54,131.76,198.03,146.18,105.25,76.97,0.0]]};
+const P=D.P,n=P.length,K=D.K,svg=document.getElementById('map');
+const X=i=>P[i][0],Y=i=>P[i][1],nm=i=>D.names[i];
+const len=t=>t.reduce((s,v,i)=>i?s+K[t[i-1]][v]:0,0)+(t.length===n?K[t[n-1]][0]:0);
+const fmt=v=>Math.round(v).toLocaleString('ga-IE')+' km';
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pathOf=(t,closed)=>'M'+t.map(i=>X(i)+' '+Y(i)).join('L')+(closed?'Z':'');
+
+/* map */
+const house=`<symbol id="hs" viewBox="-3 -3.4 6 6.4" overflow="visible"><rect x="1.1" y="-2.7" width=".8" height="1.8" fill="#111"/><rect x="-2.2" y="-.2" width="4.4" height="3" fill="#fff" stroke="#111" stroke-width=".4"/><path d="M-2.9 .1 0-2.6 2.9 .1Z" fill="#111"/><rect x="-.6" y="1.2" width="1.2" height="1.6" fill="#111"/></symbol>`;
+let pts='';for(let k=0;k<10;k++){const r=k%2?1.05:2.5,a=-Math.PI/2+k*Math.PI/5;pts+=(k?'L':'M')+(r*Math.cos(a)).toFixed(2)+' '+(r*Math.sin(a)).toFixed(2)}
+let towns='';for(let i=1;i<n;i++){const[lx,ly,la]=D.lbl[i];towns+=`<g class="hz" data-i="${i}" role="button" tabindex="0" aria-label="${esc(nm(i))}"><circle cx="${X(i)}" cy="${Y(i)}" r="4" fill="transparent"/><use href="#hs" x="${X(i)-2.4}" y="${Y(i)-2.7}" width="4.8" height="5.1"/><text x="${X(i)+lx}" y="${Y(i)+ly}" font-size="3.1" text-anchor="${la}" fill="#111">${esc(nm(i))}</text></g>`}
+const[bx,by,ba]=D.lbl[0];
+svg.innerHTML=`<defs>${house}</defs><path d="${D.county}" fill="#fff" stroke="#4c8c4a" stroke-width=".45" stroke-linejoin="round"/><g id="other"></g><g id="mine"></g><g transform="translate(${X(0)} ${Y(0)})"><circle r="3" fill="#fff" stroke="#111" stroke-width=".4"/><path d="${pts}Z" fill="#111"/></g><text x="${X(0)+bx}" y="${Y(0)+by+1.2}" font-size="3.4" text-anchor="${ba}" fill="#111">${esc(nm(0))}</text><g id="hz">${towns}</g>`;
+const mine=document.getElementById('mine'),other=document.getElementById('other');
+
+/* state */
+let route=[0];
+try{const s=JSON.parse(localStorage.getItem('turas-bealach')||'null');if(Array.isArray(s)&&s[0]===0&&s.every(v=>Number.isInteger(v)&&v>=0&&v<n)&&new Set(s).size===s.length)route=s}catch(e){}
+const save=()=>{try{localStorage.setItem('turas-bealach',JSON.stringify(route))}catch(e){}};
+const form=document.getElementById('form'),sent=document.getElementById('sent');
+function draw(){
+  const done=route.length===n;
+  mine.innerHTML=route.length>1?`<path d="${pathOf(route,done)}" fill="none" stroke="#c62828" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round"/>`:'';
+  document.querySelectorAll('.hz').forEach(g=>{const v=route.includes(+g.dataset.i);g.querySelector('use').style.opacity=v?.45:1});
+  document.getElementById('dist').textContent=fmt(len(route));
+  document.getElementById('count').textContent=done?'Gach baile, agus ar ais go Gaillimh':`${route.length-1} as ${n-1} baile`;
+  document.getElementById('trail').textContent=route.length===1?'Tosaigh i nGaillimh: cliceáil ar an gcéad bhaile eile.':route.map(nm).join(' → ')+(done?' → Gaillimh':'');
+  document.getElementById('undo').disabled=route.length<2;
+  form.hidden=!done;if(!done){sent.hidden=true;document.getElementById('send').disabled=false}
+}
+function add(i){if(route.length===n||route.includes(i))return;route.push(i);save();draw()}
+const hz=document.getElementById('hz');
+hz.addEventListener('click',e=>{const g=e.target.closest('.hz');if(g)add(+g.dataset.i)});
+hz.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;const g=e.target.closest('.hz');if(g){e.preventDefault();add(+g.dataset.i)}});
+document.getElementById('undo').onclick=()=>{if(route.length>1){route.pop();save();draw()}};
+document.getElementById('reset').onclick=()=>{route=[0];save();draw()};
+
+/* submit */
+form.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const name=document.getElementById('nm').value.trim(),org=document.getElementById('org').value.trim();
+  const show=(t,err)=>{sent.textContent=t;sent.className='msg'+(err?' err':'');sent.hidden=false};
+  if(!name){show('Cuir isteach do chéad ainm, le do thoil.',1);return}
+  if(!document.getElementById('ok').checked){show('Cuir tic sa bhosca toilithe, le do thoil.',1);return}
+  if(!CONFIG.formAction){show('Níl an fhoirm ceangailte fós.',1);return}
+  const f=CONFIG.fields,body=new URLSearchParams();
+  body.append(f.name,name);body.append(f.org,org);body.append(f.route,route.join('-'));body.append(f.consent,CONFIG.consentValue);
+  document.getElementById('send').disabled=true;
+  try{await fetch(CONFIG.formAction,{method:'POST',mode:'no-cors',body});show(`Go raibh maith agat, ${name}! Taispeánfar d'iarracht (${fmt(len(route))}) ar an gClár Ceann Riain nuair a bheidh sí ceadaithe.`)}
+  catch(err){document.getElementById('send').disabled=false;show('Theip air sin. Bain triail eile as ar ball.',1)}
+});
+
+/* leaderboard */
+function parseCSV(t){const rows=[];let row=[],f='',q=false;for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}else if(c==='"')q=true;else if(c===','){row.push(f);f=''}else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;row.push(f);rows.push(row);row=[];f=''}else f+=c}if(f||row.length){row.push(f);rows.push(row)}return rows}
+const note=document.getElementById('boardnote'),table=document.getElementById('board');
+let entries=[];
+async function loadBoard(){
+  if(!CONFIG.csv){note.textContent='Níl an clár ceangailte fós.';return}
+  try{
+    const res=await fetch(CONFIG.csv,{cache:'no-store'});const rows=parseCSV(await res.text()).slice(1);
+    entries=rows.map(r=>({name:(r[1]||'').trim(),org:(r[2]||'').trim(),km:parseFloat(String(r[3]||'').replace(',','.')),date:String(r[0]||'').trim().split(' ')[0]})).filter(r=>r.name&&r.km>0).sort((a,b)=>a.km-b.km);
+    if(!entries.length){note.textContent='Níl aon iarracht ceadaithe fós. Bí ar an gcéad duine!';return}
+    note.textContent='Na bealaí is giorra go dtí seo.';
+    let rank=0,prev=null;
+    table.tBodies[0].innerHTML=entries.map((r,k)=>{if(prev===null||Math.abs(r.km-prev)>1e-6)rank=k+1;prev=r.km;return`<tr><td class="n">${rank}</td><td>${esc(r.name)}</td><td>${esc(r.org)}</td><td class="n">${fmt(r.km)}</td><td class="n">${esc(r.date)}</td></tr>`}).join('');
+    table.hidden=false;
+  }catch(e){note.textContent='Níorbh fhéidir an clár a lódáil faoi láthair.'}
+}
+if(CONFIG.email)document.getElementById('mail').innerHTML=`<a href="mailto:${esc(CONFIG.email)}">${esc(CONFIG.email)}</a>`;
+else document.getElementById('mail').textContent='riarthóir an tsuímh';
+draw();loadBoard();
+}
+</script>
+</body>
+</html>
