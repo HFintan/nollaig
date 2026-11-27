@@ -119,7 +119,7 @@ summary{cursor:pointer;font-weight:600}
           <input type="text" id="nm" maxlength="30" autocomplete="given-name" required>
           <label for="org">Scoil nó comhlacht (roghnach)</label>
           <input type="text" id="org" maxlength="60" autocomplete="organization">
-          <label class="check"><input type="checkbox" id="ok" required><span>Aontaím go bhféadfar mo chéad ainm, mo scoil nó mo chomhlacht agus fad mo bhealaigh a thaispeáint ar an gClár Ceann Riain. <a href="#priobhaideacht">Fógra príobháideachta</a></span></label>
+          <label class="check"><input type="checkbox" id="ok" required><span>Aontaím go bhféadfar mo chéad ainm, mo scoil nó m'ollscoil nó mo chomhlacht agus fad mo bhealaigh a thaispeáint ar an gClár Ceann Riain. <a href="#priobhaideacht">Fógra príobháideachta</a></span></label>
           <button class="go" type="submit" id="send">Seol mo mholadh</button>
           <p class="msg" id="sent" hidden></p>
         </form>
@@ -127,7 +127,7 @@ summary{cursor:pointer;font-weight:600}
       <section class="panel">
         <h2>Clár Ceann Riain</h2>
         <p class="small" id="boardnote">Á lódáil…</p>
-        <div class="scroll"><table class="board" id="board" hidden><thead><tr><th class="n">#</th><th>Ainm</th><th>Scoil nó comhlacht</th><th class="n">Fad</th><th class="n">Dáta</th></tr></thead><tbody></tbody></table></div>
+        <div class="scroll"><table class="board" id="board" hidden><thead><tr><th class="n">#</th><th>Ainm</th><th>Scoil nó ollscoil nó comhlacht</th><th class="n">Fad</th><th class="n">Dáta</th></tr></thead><tbody></tbody></table></div>
       </section>
     </div>
   </div>
@@ -135,18 +135,18 @@ summary{cursor:pointer;font-weight:600}
 <div class="band" style="padding-top:0"><div class="wrap">
   <p class="reveal">Roinnfear an turas is giorra ar an leathanach seo Oíche Nollag, le cabhrú le Daidí na Nollag a chuid pleananna a dhéanamh.</p>
   <section class="lect" id="leachtai">
-    <h2>Ar mhaith leat tuilleadh eolais a fháil faoin mhatamaitic agus faoi algartaim ghaolmhara?</h2>
-    <p style="margin:0">Beidh cuir i láthair ghearra, dírithe ar lucht éisteachta nach saineolaithe iad, ar siúl i:</p>
+    <h2>Ar mhaith leat tuilleadh eolais a fháil faoin mhatamaitic/algartaim ghaolmhara?</h2>
+    <p style="margin:0">Beidh cuir i láthair ghearra, i measc cuir i láthair eile bainteach le STEM na Nollag, dírithe ar lucht éisteachta nach saineolaithe iad, ar siúl i:</p>
     <ul>
-      <li><strong>Tigh Chualáin</strong>, ar an 11 Nollaig, mar chuid d'Oíche Ólaíochta na Nollag, a thosaíonn ag 19:00. Beidh cuir i láthair freisin ar Shoilse na Nollag? Agus&nbsp;…?</li>
-      <li><strong>Áras na nGael</strong>, ar an 12 Nollaig, mar chuid de&nbsp;…?</li>
+      <li><strong>[le deimhniú]</strong>, ar an 11 Nollaig ó 19:00, mar chuid d'Oíche Ólaíochta na Nollag.</li>
+      <li><strong>Áras na nGael, Gaillimh</strong>, ar an 12 Nollaig ó 11:00-13:00, mar chuid d'imeacht "STEM na Nollag", le cúpla pióga mionra / milseáin srl.</li>
     </ul>
   </section>
 </div></div>
 <div class="band" id="priobhaideacht" style="padding-top:0"><div class="wrap">
   <details>
     <summary>Fógra príobháideachta agus IS</summary>
-    <p class="small">Nuair a sheolann tú do mholadh, bailímid do chéad ainm, do scoil nó do chomhlacht (más mian leat) agus an bealach a roghnaigh tú. Ní fhoilsítear an bealach féin, ach a fhad amháin. Ní thaispeántar iarracht ar bith ar an gclár go dtí go gbhfaomhtar í. Ní úsáidtear an t-eolas seo ach don Chlár Ceann Riain, agus coinneofar é fad a bheidh an clár ar líne. Chun d'iarracht a bhaint den chlár, scríobh chuig <span id="mail"></span>.</p>
+    <p class="small">Nuair a sheolann tú do mholadh, bailímid do chéad ainm, do scoil nó d'ollscoil nó do chomhlacht (más mian leat) agus an bealach a roghnaigh tú. Ní fhoilsítear an bealach féin, ach a fhad amháin. Ní thaispeántar iarracht ar bith ar an gclár go dtí go gbhfaomhtar í. Ní úsáidtear an t-eolas seo ach don Chlár Ceann Riain, agus coinneofar é fad a bheidh an clár ar líne. Chun d'iarracht a bhaint den chlár, scríobh chuig <span id="mail"></span>.</p>
     <p class="small">Baineadh úsáid as intleacht shaorga chun an leathanach seo a dhearadh, ach ní roinnfimid d'fhreagraí le IS riamh. Próiseáiltear na turais le scarbhileoga.</p>
   </details>
   <p class="small">Léarscáil: Natural Earth agus Code for Germany. Íomhánna: Font Awesome (CC BY 4.0) agus game-icons.net (CC BY 3.0).</p>
