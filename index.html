@@ -146,7 +146,7 @@ summary{cursor:pointer;font-weight:600}
 <div class="band" id="priobhaideacht" style="padding-top:0"><div class="wrap">
   <details>
     <summary>Fógra príobháideachta agus IS</summary>
-    <p class="small">Nuair a sheolann tú do mholadh, bailímid do chéad ainm, do scoil nó do chomhlacht (más mian leat) agus an bealach a roghnaigh tú. Ní fhoilsítear an bealach féin, ach a fhad amháin. Ní thaispeántar iarracht ar bith ar an gclár go dtí go gceadaítear í. Ní úsáidtear an t-eolas seo ach don Chlár Ceann Riain, agus coinneofar é fad a bheidh an clár ar líne. Chun d'iarracht a bhaint den chlár, scríobh chuig <span id="mail"></span>.</p>
+    <p class="small">Nuair a sheolann tú do mholadh, bailímid do chéad ainm, do scoil nó do chomhlacht (más mian leat) agus an bealach a roghnaigh tú. Ní fhoilsítear an bealach féin, ach a fhad amháin. Ní thaispeántar iarracht ar bith ar an gclár go dtí go gbhfaomhtar í. Ní úsáidtear an t-eolas seo ach don Chlár Ceann Riain, agus coinneofar é fad a bheidh an clár ar líne. Chun d'iarracht a bhaint den chlár, scríobh chuig <span id="mail"></span>.</p>
     <p class="small">Baineadh úsáid as intleacht shaorga chun an leathanach seo a dhearadh, ach ní roinnfimid d'fhreagraí le IS riamh. Próiseáiltear na turais le scarbhileoga.</p>
   </details>
   <p class="small">Léarscáil: Natural Earth agus Code for Germany. Íomhánna: Font Awesome (CC BY 4.0) agus game-icons.net (CC BY 3.0).</p>
@@ -211,7 +211,7 @@ form.addEventListener('submit',async e=>{
   const f=CONFIG.fields,body=new URLSearchParams();
   body.append(f.name,name);body.append(f.org,org);body.append(f.route,route.join('-'));body.append(f.consent,CONFIG.consentValue);
   document.getElementById('send').disabled=true;
-  try{await fetch(CONFIG.formAction,{method:'POST',mode:'no-cors',body});show(`Go raibh maith agat, ${name}! Taispeánfar d'iarracht (${fmt(len(route))}) ar an gClár Ceann Riain nuair a bheidh sí ceadaithe.`)}
+  try{await fetch(CONFIG.formAction,{method:'POST',mode:'no-cors',body});show(`Go raibh maith agat, ${name}! Taispeánfar d'iarracht (${fmt(len(route))}) ar an gClár Ceann Riain nuair a bheidh sí faofa.`)}
   catch(err){document.getElementById('send').disabled=false;show('Theip air sin. Bain triail eile as ar ball.',1)}
 });
 
@@ -224,7 +224,7 @@ async function loadBoard(){
   try{
     const res=await fetch(CONFIG.csv,{cache:'no-store'});const rows=parseCSV(await res.text()).slice(1);
     entries=rows.map(r=>({name:(r[1]||'').trim(),org:(r[2]||'').trim(),km:parseFloat(String(r[3]||'').replace(',','.')),date:String(r[0]||'').trim().split(' ')[0]})).filter(r=>r.name&&r.km>0).sort((a,b)=>a.km-b.km);
-    if(!entries.length){note.textContent='Níl aon iarracht ceadaithe fós. Bí ar an gcéad duine!';return}
+    if(!entries.length){note.textContent='Níl aon iarracht faofa fós. Bí ar an gcéad duine!';return}
     note.textContent='Na bealaí is giorra go dtí seo.';
     let rank=0,prev=null;
     table.tBodies[0].innerHTML=entries.map((r,k)=>{if(prev===null||Math.abs(r.km-prev)>1e-6)rank=k+1;prev=r.km;return`<tr><td class="n">${rank}</td><td>${esc(r.name)}</td><td>${esc(r.org)}</td><td class="n">${fmt(r.km)}</td><td class="n">${esc(r.date)}</td></tr>`}).join('');
